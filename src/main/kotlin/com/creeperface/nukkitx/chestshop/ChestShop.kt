@@ -28,8 +28,10 @@ import cn.nukkit.nbt.tag.CompoundTag
 import cn.nukkit.permission.Permissible
 import cn.nukkit.plugin.PluginBase
 import cn.nukkit.utils.Config
+import cn.nukkit.utils.PluginException
 import cn.nukkit.utils.TextFormat
 import com.creeperface.nukkitx.chestshop.data.ShopData
+import com.creeperface.nukkitx.chestshop.economy.EconomyAPIInterface
 import com.creeperface.nukkitx.chestshop.economy.EconomyInterface
 import com.creeperface.nukkitx.chestshop.util.*
 import java.io.File
@@ -50,10 +52,22 @@ class ChestShop : PluginBase(), Listener {
 
     override fun onEnable() {
         this.server.pluginManager.registerEvents(this, this)
+        saveResource("config.yml")
         saveResource("czech.yml")
         saveResource("english.yml")
 
-        Lang.init(Config(File(dataFolder, "czech.yml"), Config.YAML).all)
+        val cfg = config
+        val lang = cfg.getString("language", "english")
+
+        Lang.init(Config(File(dataFolder, "$lang.yml"), Config.YAML).all)
+
+        if (!::economy.isInitialized) {
+            if (server.pluginManager.getPlugin("EconomyAPI") != null) {
+                economy = EconomyAPIInterface()
+            } else {
+                throw PluginException("No economy provider found")
+            }
+        }
     }
 
     private fun tryCreateShop(p: Player, b: Block): Boolean {
