@@ -1,0 +1,24 @@
+name: ChestShop
+version: "1.0"
+api: ["1.0.0"]
+main: com.creeperface.nukkitx.chestshop.ChestShop
+author: "CreeperFace"
+description: "ChestShop plugin for nukkit"
+depend: ["GTCore", "KotlinLib"]
+
+commands:
+  chestshop:
+    description: "Chest shop command"
+    permission: "chestshop.create"
+    usage: "Use /chestshop <create|remove|reset>"
+
+permissions:
+  chestshop.admin:
+    description: "Allows to create new or modify any existing shop"
+    default: op
+  chestshop.create:
+    description: "Allows to create/remove new shop"
+    default: op
+  chestshop.use:
+    description: "Allows to use the shop"
+    default: true
