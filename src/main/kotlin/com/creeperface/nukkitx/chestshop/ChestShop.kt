@@ -59,7 +59,13 @@ class ChestShop : PluginBase(), Listener {
         val cfg = config
         val lang = cfg.getString("language", "english")
 
-        Lang.init(Config(File(dataFolder, "$lang.yml"), Config.YAML).all)
+        val cfgFile = File(dataFolder, "$lang.yml")
+
+        if (!cfgFile.exists()) {
+            throw PluginException("Language file '${cfgFile.absolutePath}' does not exist")
+        }
+
+        Lang.init(Config(cfgFile, Config.YAML).all)
 
         if (!::economy.isInitialized) {
             if (server.pluginManager.getPlugin("EconomyAPI") != null) {
@@ -340,7 +346,7 @@ class ChestShop : PluginBase(), Listener {
                 return
             }
 
-            val be = b.level.getBlockEntity(shopData.containers.singleOrNull()?.asVector3())
+            val be = b.level.getBlockEntity(shopData.containers.first().asVector3())
 
             if (be !is InventoryHolder) {
                 p.sendTranslated("shop_not_exists")
