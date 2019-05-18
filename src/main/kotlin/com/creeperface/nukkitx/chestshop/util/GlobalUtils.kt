@@ -6,6 +6,7 @@ import cn.nukkit.blockentity.BlockEntity
 import cn.nukkit.blockentity.BlockEntitySign
 import cn.nukkit.item.Item
 import cn.nukkit.level.Level
+import cn.nukkit.level.Position
 import cn.nukkit.math.BlockVector3
 import cn.nukkit.nbt.tag.CompoundTag
 import cn.nukkit.nbt.tag.ListTag
@@ -83,6 +84,8 @@ fun CompoundTag.toSimpleItem() = Item.get(getInt("id"), getInt("data"), getInt("
 fun Block.getBlockEntity(): BlockEntity? = this.level.getBlockEntity(this)
 
 fun Block.isShop() = getBlockEntity()?.isShop() ?: false
+
+fun Position.isShop() = levelBlock.isShop()
 
 fun CompoundTag.toBlockVector3(): BlockVector3 {
     val x = this.getInt("x")

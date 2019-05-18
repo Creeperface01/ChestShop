@@ -17,9 +17,11 @@ import cn.nukkit.event.block.BlockBurnEvent
 import cn.nukkit.event.block.BlockIgniteEvent
 import cn.nukkit.event.block.BlockPlaceEvent
 import cn.nukkit.event.entity.EntityExplodeEvent
+import cn.nukkit.event.inventory.InventoryMoveItemEvent
 import cn.nukkit.event.player.PlayerInteractEvent
 import cn.nukkit.inventory.InventoryHolder
 import cn.nukkit.item.Item
+import cn.nukkit.level.Position
 import cn.nukkit.math.BlockFace
 import cn.nukkit.math.BlockFace.Plane
 import cn.nukkit.math.BlockVector3
@@ -395,6 +397,16 @@ class ChestShop : PluginBase(), Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun onExplosion(e: EntityExplodeEvent) {
         e.blockList = e.blockList.filter { !it.isShop() }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    fun onItemMove(e: InventoryMoveItemEvent) {
+        val target = e.targetInventory
+        val from = e.inventory
+
+        if ((from.holder as? Position)?.isShop() == true || (target.holder as? Position)?.isShop() == true) {
+            e.setCancelled()
+        }
     }
 
     override fun onCommand(p: CommandSender, cmd: Command, label: String, args: Array<out String>): Boolean {
