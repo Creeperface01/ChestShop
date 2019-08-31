@@ -19,6 +19,7 @@ import cn.nukkit.event.block.BlockPlaceEvent
 import cn.nukkit.event.entity.EntityExplodeEvent
 import cn.nukkit.event.inventory.InventoryMoveItemEvent
 import cn.nukkit.event.player.PlayerInteractEvent
+import cn.nukkit.inventory.Inventory
 import cn.nukkit.inventory.InventoryHolder
 import cn.nukkit.item.Item
 import cn.nukkit.level.Position
@@ -401,10 +402,10 @@ class ChestShop : PluginBase(), Listener {
 
     @EventHandler(ignoreCancelled = true)
     fun onItemMove(e: InventoryMoveItemEvent) {
-        val target = e.targetInventory
-        val from = e.inventory
+        val target: Inventory? = e.targetInventory
+        val from: Inventory? = e.inventory
 
-        if ((from.holder as? Position)?.isShop() == true || (target.holder as? Position)?.isShop() == true) {
+        if ((from?.holder as? Position)?.isShop() == true || (target?.holder as? Position)?.isShop() == true) {
             e.setCancelled()
         }
     }
