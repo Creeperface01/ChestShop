@@ -58,6 +58,7 @@ class ChestShop : PluginBase(), Listener {
         saveResource("config.yml")
         saveResource("czech.yml")
         saveResource("english.yml")
+        saveResource("dutch.yml")
 
         val cfg = config
         val lang = cfg.getString("language", "english")
