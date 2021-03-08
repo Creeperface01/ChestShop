@@ -1,11 +1,11 @@
 name: ChestShop
-version: "1.1.1"
+version: "1.1.2"
 api: ["1.0.0"]
 main: com.creeperface.nukkitx.chestshop.ChestShop
 author: "CreeperFace"
 description: "ChestShop plugin for nukkit"
 depend: ["KotlinLib"]
-softdepend: ["EconomyAPI"]
+softdepend: [ "EconomyAPI", "LlamaEconomy" ]
 
 commands:
   chestshop:
