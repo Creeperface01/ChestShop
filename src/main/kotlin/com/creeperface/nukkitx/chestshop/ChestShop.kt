@@ -98,7 +98,7 @@ class ChestShop : PluginBase(), Listener {
 
         val line1 = lines[0].toLowerCase().trim()
 
-        if ((line1 == "[shop]" || line1 == "/shop")) {
+        if ((line1 == "sell" || line1 == "[sell]" || line1 == "/sell")) {
             val countString = lines[1].toLowerCase().trim()
             val priceString = lines[2].toLowerCase().trim()
             val itemString = lines[3].toLowerCase().trim()
@@ -162,7 +162,77 @@ class ChestShop : PluginBase(), Listener {
 
             blockEntity.createShop(ShopData(item, price, p.name, containers.toMutableList()))
 
-            blockEntity.setText("${TextFormat.GRAY}[${TextFormat.GREEN}SHOP${TextFormat.GRAY}]", TextFormat.GRAY.toString() + p.name, "${TextFormat.YELLOW}${item.name} ${TextFormat.GRAY}(${TextFormat.GREEN}${item.count}x${TextFormat.GRAY})", "${TextFormat.GRAY}price: ${TextFormat.GREEN}$price")
+            blockEntity.setText("${TextFormat.GRAY}[${TextFormat.GREEN}SELLING${TextFormat.GRAY}]", TextFormat.GRAY.toString() + p.name, "${TextFormat.YELLOW}${item.name} ${TextFormat.GRAY}(${TextFormat.GREEN}${item.count}x${TextFormat.GRAY})", "${TextFormat.GRAY}price: ${TextFormat.GREEN}$price")
+
+            p.sendTranslated("success")
+            return true
+        }
+
+        if ((line1 == "buy" || line1 == "[buy]" || line1 == "/buy")) {
+            val countString = lines[1].toLowerCase().trim()
+            val priceString = lines[2].toLowerCase().trim()
+            val itemString = lines[3].toLowerCase().trim()
+
+            val count: Int
+            val price: Int
+
+            try {
+                count = countString.toInt()
+            } catch (ex: NumberFormatException) {
+                p.sendTranslated("err_count")
+                return false
+            }
+
+            if (count <= 0) {
+                p.sendTranslated("negative_count")
+                return false
+            }
+
+            try {
+                price = priceString.toInt()
+            } catch (ex: NumberFormatException) {
+                p.sendTranslated("err_price")
+                return false
+            }
+
+            if (price < 0) {
+                p.sendTranslated("negative_price")
+                return false
+            }
+
+            val item: Item
+
+            try {
+                item = Item.fromString(itemString)
+            } catch (ex: Exception) {
+                p.sendTranslated("err_item", itemString)
+                return false
+            }
+
+            if (item.id == 0) {
+                p.sendTranslated("item_air")
+                return false
+            }
+
+            item.setCount(count)
+
+            val chestPos = checkShopCreation(b) ?: return false
+
+            val chest = b.level.getBlockEntity(chestPos) as? BlockEntityChest ?: return false
+            val signCompound = CompoundTag().putCompound("sign", b.location.clone().asBlockVector3().toCompoundTag())
+
+            chest.namedTag.putCompound(SHOP_CONT_TAG, signCompound)
+
+            val containers = if (chest.pair != null) {
+                chest.pair.namedTag.putCompound(SHOP_CONT_TAG, signCompound)
+                listOf(chest.pair.location, chestPos)
+            } else {
+                listOf(chestPos)
+            }.map { it.asBlockVector3() }
+
+            blockEntity.createShop(ShopData(item, price, p.name, containers.toMutableList()))
+
+            blockEntity.setText("${TextFormat.GRAY}[${TextFormat.GREEN}BUYING${TextFormat.GRAY}]", TextFormat.GRAY.toString() + p.name, "${TextFormat.YELLOW}${item.name} ${TextFormat.GRAY}(${TextFormat.GREEN}${item.count}x${TextFormat.GRAY})", "${TextFormat.GRAY}price: ${TextFormat.GREEN}$price")
 
             p.sendTranslated("success")
             return true
