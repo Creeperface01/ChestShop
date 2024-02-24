@@ -36,7 +36,6 @@ import cn.nukkit.utils.TextFormat
 import com.creeperface.nukkitx.chestshop.data.ShopData
 import com.creeperface.nukkitx.chestshop.economy.EconomyAPIInterface
 import com.creeperface.nukkitx.chestshop.economy.EconomyInterface
-import com.creeperface.nukkitx.chestshop.economy.LlamaEconomyInterface
 import com.creeperface.nukkitx.chestshop.util.*
 import java.io.File
 import java.util.*
@@ -74,9 +73,6 @@ class ChestShop : PluginBase(), Listener {
 
         if (!::economy.isInitialized) {
             economy = when {
-                server.pluginManager.getPlugin("LlamaEconomy") != null -> {
-                    LlamaEconomyInterface()
-                }
                 server.pluginManager.getPlugin("EconomyAPI") != null -> {
                     EconomyAPIInterface()
                 }

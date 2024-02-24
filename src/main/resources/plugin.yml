@@ -5,7 +5,7 @@ main: com.creeperface.nukkitx.chestshop.ChestShop
 author: "CreeperFace"
 description: "ChestShop plugin for nukkit"
 depend: ["KotlinLib"]
-softdepend: [ "EconomyAPI", "LlamaEconomy" ]
+softdepend: [ "EconomyAPI" ]
 
 commands:
   chestshop:
