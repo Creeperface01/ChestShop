@@ -36,7 +36,6 @@ import cn.nukkit.utils.TextFormat
 import com.creeperface.nukkitx.chestshop.data.ShopData
 import com.creeperface.nukkitx.chestshop.economy.EconomyAPIInterface
 import com.creeperface.nukkitx.chestshop.economy.EconomyInterface
-import com.creeperface.nukkitx.chestshop.economy.LlamaEconomyInterface
 import com.creeperface.nukkitx.chestshop.util.*
 import java.io.File
 import java.util.*
@@ -74,9 +73,6 @@ class ChestShop : PluginBase(), Listener {
 
         if (!::economy.isInitialized) {
             economy = when {
-                server.pluginManager.getPlugin("LlamaEconomy") != null -> {
-                    LlamaEconomyInterface()
-                }
                 server.pluginManager.getPlugin("EconomyAPI") != null -> {
                     EconomyAPIInterface()
                 }
@@ -102,7 +98,7 @@ class ChestShop : PluginBase(), Listener {
 
         val line1 = lines[0].toLowerCase().trim()
 
-        if ((line1 == "[shop]" || line1 == "/shop")) {
+        if ((line1 == "sell" || line1 == "[sell]" || line1 == "/sell")) {
             val countString = lines[1].toLowerCase().trim()
             val priceString = lines[2].toLowerCase().trim()
             val itemString = lines[3].toLowerCase().trim()
@@ -164,9 +160,79 @@ class ChestShop : PluginBase(), Listener {
                 listOf(chestPos)
             }.map { it.asBlockVector3() }
 
-            blockEntity.createShop(ShopData(item, price, p.name, containers.toMutableList()))
+            blockEntity.createShop(ShopData(item, price, p.name, "sell", containers.toMutableList()))
 
-            blockEntity.setText("${TextFormat.GRAY}[${TextFormat.GREEN}SHOP${TextFormat.GRAY}]", TextFormat.GRAY.toString() + p.name, "${TextFormat.YELLOW}${item.name} ${TextFormat.GRAY}(${TextFormat.GREEN}${item.count}x${TextFormat.GRAY})", "${TextFormat.GRAY}price: ${TextFormat.GREEN}$price")
+            blockEntity.setText("${TextFormat.GRAY}[${TextFormat.GREEN}SELLING${TextFormat.GRAY}]", TextFormat.GRAY.toString() + p.name, "${TextFormat.YELLOW}${item.name} ${TextFormat.GRAY}(${TextFormat.GREEN}${item.count}x${TextFormat.GRAY})", "${TextFormat.GRAY}price: ${TextFormat.GREEN}$price")
+
+            p.sendTranslated("success")
+            return true
+        }
+
+        if ((line1 == "buy" || line1 == "[buy]" || line1 == "/buy")) {
+            val countString = lines[1].toLowerCase().trim()
+            val priceString = lines[2].toLowerCase().trim()
+            val itemString = lines[3].toLowerCase().trim()
+
+            val count: Int
+            val price: Int
+
+            try {
+                count = countString.toInt()
+            } catch (ex: NumberFormatException) {
+                p.sendTranslated("err_count")
+                return false
+            }
+
+            if (count <= 0) {
+                p.sendTranslated("negative_count")
+                return false
+            }
+
+            try {
+                price = priceString.toInt()
+            } catch (ex: NumberFormatException) {
+                p.sendTranslated("err_price")
+                return false
+            }
+
+            if (price < 0) {
+                p.sendTranslated("negative_price")
+                return false
+            }
+
+            val item: Item
+
+            try {
+                item = Item.fromString(itemString)
+            } catch (ex: Exception) {
+                p.sendTranslated("err_item", itemString)
+                return false
+            }
+
+            if (item.id == 0) {
+                p.sendTranslated("item_air")
+                return false
+            }
+
+            item.setCount(count)
+
+            val chestPos = checkShopCreation(b) ?: return false
+
+            val chest = b.level.getBlockEntity(chestPos) as? BlockEntityChest ?: return false
+            val signCompound = CompoundTag().putCompound("sign", b.location.clone().asBlockVector3().toCompoundTag())
+
+            chest.namedTag.putCompound(SHOP_CONT_TAG, signCompound)
+
+            val containers = if (chest.pair != null) {
+                chest.pair.namedTag.putCompound(SHOP_CONT_TAG, signCompound)
+                listOf(chest.pair.location, chestPos)
+            } else {
+                listOf(chestPos)
+            }.map { it.asBlockVector3() }
+
+            blockEntity.createShop(ShopData(item, price, p.name, "buy", containers.toMutableList()))
+
+            blockEntity.setText("${TextFormat.GRAY}[${TextFormat.GREEN}BUYING${TextFormat.GRAY}]", TextFormat.GRAY.toString() + p.name, "${TextFormat.YELLOW}${item.name} ${TextFormat.GRAY}(${TextFormat.GREEN}${item.count}x${TextFormat.GRAY})", "${TextFormat.GRAY}price: ${TextFormat.GREEN}$price")
 
             p.sendTranslated("success")
             return true
@@ -353,7 +419,7 @@ class ChestShop : PluginBase(), Listener {
             }
 
             if (shopData.containers.isEmpty()) {
-                p.sendMessage("empty containers")
+                p.sendMessage("empty shopData containers list")
                 return
             }
 
@@ -364,23 +430,51 @@ class ChestShop : PluginBase(), Listener {
                 return
             }
 
-            val inv = be.inventory
+            // Split here on buy/sell
+            if (shopData.type.equals("sell", true)) {
+                val inv = be.inventory
 
-            if (!inv.contains(shopData.item)) {
-                p.sendTranslated("shop_empty")
-                return
+                if (!inv.contains(shopData.item)) {
+                    p.sendTranslated("shop_empty")
+                    return
+                }
+
+                if (!economy.hasMoney(p, shopData.price)) {
+                    p.sendTranslated("money")
+                    return
+                }
+
+                p.inventory.addItem(shopData.item.clone())
+                economy.transfer(p.name, shopData.owner, shopData.price)
+                inv.removeItem(shopData.item)
+
+                p.sendTranslated("purchase", shopData.item.count.toString(), shopData.item.name)
+
+            } else if (shopData.type.equals("buy", true)) {
+                val inv = be.inventory
+
+                if (!p.inventory.contains(shopData.item)) {
+                    // p.sendTranslated("todo")
+                    p.sendMessage("You don't have the item in your inventory")
+                    return
+                }
+
+                if (!economy.hasMoney(shopData.owner, shopData.price)) {
+                    // p.sendTranslated("todo")
+                    p.sendMessage("The shop owner does not have enough money to buy this")
+                    return
+                }
+
+                inv.addItem(shopData.item.clone())
+                economy.transfer(shopData.owner, p.name, shopData.price)
+                p.inventory.removeItem(shopData.item)
+
+                // p.sendTranslated("sold", shopData.item.count.toString(), shopData.item.name)
+                p.sendMessage("sold")
+            } else {
+                p.sendMessage("error: shop type was not buy or sell")
             }
 
-            if (!economy.hasMoney(p, shopData.price)) {
-                p.sendTranslated("money")
-                return
-            }
-
-            p.inventory.addItem(shopData.item.clone())
-            economy.transfer(p.name, shopData.owner, shopData.price)
-            inv.removeItem(shopData.item)
-
-            p.sendTranslated("purchase", shopData.item.count.toString(), shopData.item.name)
             return
         }
 

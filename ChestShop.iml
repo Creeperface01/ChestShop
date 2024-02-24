@@ -42,6 +42,5 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-test-common:1.2.71" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: me.onebone:economyapi:2.0.0-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: cn.nukkit:nukkit:1.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: net.lldv.llamaeconomy:LlamaEconomy:1.0.0-SNAPSHOT" level="project" />
   </component>
 </module>
